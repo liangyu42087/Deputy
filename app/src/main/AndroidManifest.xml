@@ -15,6 +15,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="deputy.android.com.deputyliang.database.DeputyProvider"
+            android:authorities="deputy.android.com.deputyliang"
+            android:exported="false"/>
     </application>
+
+
 
 </manifest>
