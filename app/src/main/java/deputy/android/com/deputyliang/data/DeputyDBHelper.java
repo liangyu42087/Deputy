@@ -1,4 +1,4 @@
-package deputy.android.com.deputyliang.database;
+package deputy.android.com.deputyliang.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

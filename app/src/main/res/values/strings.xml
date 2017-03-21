@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">DeputyLiang</string>
+    <string name="app_name">Deputy</string>
+    <string name="empty_shift_list">You have no shifts.</string>
 </resources>

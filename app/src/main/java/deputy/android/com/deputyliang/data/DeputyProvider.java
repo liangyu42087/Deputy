@@ -1,4 +1,4 @@
-package deputy.android.com.deputyliang.database;
+package deputy.android.com.deputyliang.data;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -7,7 +7,6 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.support.annotation.Nullable;
 
 /**
  * Created by liangyu42087 on 2017/3/20.

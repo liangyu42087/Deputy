@@ -17,7 +17,7 @@
         </activity>
 
         <provider
-            android:name="deputy.android.com.deputyliang.database.DeputyProvider"
+            android:name="deputy.android.com.deputyliang.data.DeputyProvider"
             android:authorities="deputy.android.com.deputyliang"
             android:exported="false"/>
     </application>

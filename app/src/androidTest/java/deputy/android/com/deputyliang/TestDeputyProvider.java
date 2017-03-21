@@ -2,7 +2,6 @@ package deputy.android.com.deputyliang;
 
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
@@ -18,9 +17,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import deputy.android.com.deputyliang.database.DeputyContract;
-import deputy.android.com.deputyliang.database.DeputyDBHelper;
-import deputy.android.com.deputyliang.database.DeputyProvider;
+import deputy.android.com.deputyliang.data.DeputyContract;
+import deputy.android.com.deputyliang.data.DeputyDBHelper;
+import deputy.android.com.deputyliang.data.DeputyProvider;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
