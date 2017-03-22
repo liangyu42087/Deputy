@@ -23,7 +23,9 @@
             android:authorities="deputy.android.com.deputyliang"
             android:exported="false" />
 
-        <activity android:name=".DetailActivity"></activity>
+        <activity android:name=".DetailActivity"
+            android:parentActivityName=".MainActivity"
+            ></activity>
     </application>
 
 </manifest>
