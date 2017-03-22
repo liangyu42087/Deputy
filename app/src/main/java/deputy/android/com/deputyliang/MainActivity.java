@@ -1,6 +1,7 @@
 package deputy.android.com.deputyliang;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
@@ -78,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
                 //Insert into DB.
                 JSONObject jsonObject = (JSONObject) response;
                 getSupportActionBar().setTitle(jsonObject.getString("name"));
-
             } else if (response instanceof JSONObject[]) {
 
             }
@@ -106,6 +106,10 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
         Toast.makeText(this, String.valueOf(shift.getShift_id()), Toast.LENGTH_SHORT).show();
     }
 
+    public void addNewShifts(View view){
+        Intent intent = new Intent(this, DetailActivity.class);
+        startActivity(intent);
+    }
     private void showShiftDataView() {
         mEmptyMessageDisplay.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.VISIBLE);
