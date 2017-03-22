@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Deputy</string>
     <string name="empty_shift_list">You have no shifts.</string>
+    <string name="main_activity_volley_error">An error has occurred when trying to retrieve Deputy shift records, please try again. </string>
 </resources>
