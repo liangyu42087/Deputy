@@ -21,10 +21,10 @@ public class DeputyContract {
          */
         public static final String TABLE_NAME = "shift";
 
-        /**
+    /*    *//**
          * This is the column name in the SQLiteDatabase for the retrieved id.
-         */
-        public static final String COLUMN_SHIFT_ID = "shift_id";
+         *//*
+        public static final String COLUMN_SHIFT_ID = "shift_id";*/
         /**
          * This is the column name in the SQLiteDatabase for the start time.
          */

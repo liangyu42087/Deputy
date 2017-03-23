@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
 
     @Override
     public void onClick(Shift shift) {
-        Toast.makeText(this, String.valueOf(shift.getShift_id()), Toast.LENGTH_SHORT).show();
+       //
     }
 
     public void addNewShifts(View view){

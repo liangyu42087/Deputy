@@ -68,7 +68,7 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
     @Override
     public void onBindViewHolder(ShiftAdapterViewHolder shiftAdapterViewHolder, int position) {
         Shift shift = mShiftData[position];
-        shiftAdapterViewHolder.tv_shift.setText(String.valueOf(shift.getShift_id()));
+        //shiftAdapterViewHolder.tv_shift.setText(String.valueOf(shift.getShift_id()));
     }
 
 

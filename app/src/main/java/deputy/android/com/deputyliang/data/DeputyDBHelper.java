@@ -22,11 +22,11 @@ public class DeputyDBHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_SHIFT_TABLE =
                 "CREATE TABLE " + DeputyContract.ShiftEntry.TABLE_NAME + " (" +
                         DeputyContract.ShiftEntry._ID                               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        DeputyContract.ShiftEntry.COLUMN_SHIFT_ID               + " INTEGER NOT NULL, " +
-                        DeputyContract.ShiftEntry.COLUMN_START                  + " TEXT NOT NULL," +
+                        //DeputyContract.ShiftEntry.COLUMN_SHIFT_ID               + " INTEGER NOT NULL, " +
+                        DeputyContract.ShiftEntry.COLUMN_START                  + " INTEGER NOT NULL," +
                         DeputyContract.ShiftEntry.COLUMN_START_LATITUDE           + " TEXT NOT NULL," +
                         DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE           + " TEXT NOT NULL," +
-                        DeputyContract.ShiftEntry.COLUMN_END                        + " TEXT,"                  +
+                        DeputyContract.ShiftEntry.COLUMN_END                        + " INTEGER,"                  +
                         DeputyContract.ShiftEntry.COLUMN_END_LATITUDE           + " TEXT," +
                         DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE           + " TEXT," +
                         DeputyContract.ShiftEntry.COLUMN_IMAGE                   + " TEXT);";

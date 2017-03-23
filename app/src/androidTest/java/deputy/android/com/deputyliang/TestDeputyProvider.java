@@ -162,7 +162,7 @@ public class TestDeputyProvider {
 
         /* Create values to insert */
         ContentValues shiftValues = new ContentValues();
-        shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
+        //shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START, "2017-01-17T06:35:57+00:00");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE, "0.00000");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE, "0.00000");
@@ -189,7 +189,7 @@ public class TestDeputyProvider {
         SQLiteDatabase database = dbHelper.getWritableDatabase();
 
         ContentValues shiftValues = new ContentValues();
-        shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
+       // shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START, "2017-01-17T06:35:57+00:00");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE, "0.00000");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE, "0.00000");
@@ -235,7 +235,7 @@ public class TestDeputyProvider {
         SQLiteDatabase database = dbHelper.getWritableDatabase();
 
         ContentValues shiftValues = new ContentValues();
-        shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
+        //shiftValues.put(DeputyContract.ShiftEntry.COLUMN_SHIFT_ID, "42");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START, "2017-01-17T06:35:57+00:00");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE, "0.00000");
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE, "0.00000");
@@ -261,7 +261,7 @@ public class TestDeputyProvider {
          */
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_END, "2017-01-16T18:42:12+00:00");
 
-        String selection = DeputyContract.ShiftEntry.COLUMN_SHIFT_ID + " = ?";
+        //String selection = DeputyContract.ShiftEntry.COLUMN_SHIFT_ID + " = ?";
         String [] selectionArgs = {"42"};
 
         int updatedRows = contentResolver.update(DeputyContract.ShiftEntry.CONTENT_URI, shiftValues, selection, selectionArgs);
