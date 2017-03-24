@@ -2,6 +2,8 @@
     <string name="app_name">Deputy</string>
     <string name="empty_shift_list">You have no shifts.</string>
     <string name="main_activity_volley_error">An error has occurred when trying to retrieve Deputy shift records, please try again. </string>
+    <string name="detail_activity_volley_error">An error has occurred when trying to post Deputy shift records, please try again. </string>
+    <string name="detail_activity_json_error">Unable to convert to json. </string>
     <string name="detail_activity_insert_error">An error has occurred when trying insert into database.. </string>
     <string name="current_time">Current Time</string>
     <string name="current_location">Current Location</string>

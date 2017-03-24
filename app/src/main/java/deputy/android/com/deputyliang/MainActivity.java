@@ -23,6 +23,7 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,6 +35,7 @@ import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
 import deputy.android.com.deputyliang.network.VolleyRequestQueue;
 import deputy.android.com.deputyliang.testing.ShiftTestUtil;
+import deputy.android.com.deputyliang.util.GenericUtil;
 
 public class MainActivity extends AppCompatActivity implements ShiftAdapter.ShiftAdapterOnClickHandler, Response.ErrorListener, Response.Listener, ImageLoader.ImageListener, DeputyAsyncHandler.AsyncListener{
 
@@ -71,9 +73,15 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
         mRecyclerView.setAdapter(mShiftAdapter);
 
        // mShiftAdapter.setShiftData(ShiftTestUtil.generateArrayOfFakeShift());
-        populateActionBar();
+        //populateActionBar();
 
         mAsyncHandler = new DeputyAsyncHandler(getContentResolver(), this);
+       // populateShiftData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         populateShiftData();
     }
 
@@ -81,9 +89,18 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
 
         //If Internet exist retrieve from Server, else display local data from DB.
 
-        boolean noInternet = true;
+        boolean noInternet = false;
         if(noInternet){
             mAsyncHandler.startQuery(QUERY_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, PROJECTION, null, null, SORT_ORDER);
+        }else{
+            JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, VolleyRequestQueue.SHIFTS_URL, null, this, this){
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    return VolleyRequestQueue.getHeaderParameter();
+                }
+            };
+            jsonArrayRequest.setTag(TAG);
+            VolleyRequestQueue.getInstance(this).addToRequestQueue(jsonArrayRequest);
         }
     }
 
@@ -130,7 +147,28 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
                 //Insert into DB.
                 JSONObject jsonObject = (JSONObject) response;
                 getSupportActionBar().setTitle(jsonObject.getString("name"));
-            } else if (response instanceof JSONObject[]) {
+            } else if (response instanceof JSONArray) {
+                JSONArray jsonArray = (JSONArray)response;
+                mShiftData = new Shift[jsonArray.length()];
+                for(int i = 0; i < jsonArray.length(); i++){
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    Shift shift = new Shift();
+                    shift.set_id(jsonObject.getInt(VolleyRequestQueue.ID));
+                    shift.setStart(GenericUtil.getMillisecondsFromTime(jsonObject.getString(VolleyRequestQueue.START)));
+                    shift.setEnd(GenericUtil.getMillisecondsFromTime(jsonObject.getString(VolleyRequestQueue.END)));
+                    String startLatitude = jsonObject.getString(VolleyRequestQueue.STARTLATITUDE);
+                    if(startLatitude != null && !startLatitude.isEmpty()) shift.setStartLatitude(Double.parseDouble(startLatitude));
+                   String startLongitude = jsonObject.getString(VolleyRequestQueue.STARTLONGITUDE);
+                    if(startLongitude != null && !startLongitude.isEmpty()) shift.setStartLongitude(Double.parseDouble(startLongitude));
+
+                    String endLatitude = jsonObject.getString(VolleyRequestQueue.ENDLATITUDE);
+                    if(endLatitude != null && !endLatitude.isEmpty()) shift.setStartLatitude(Double.parseDouble(endLatitude));
+                    String endLongitude = jsonObject.getString(VolleyRequestQueue.ENDLONGITUDE);
+                    if(endLongitude != null && !endLongitude.isEmpty()) shift.setStartLongitude(Double.parseDouble(endLongitude));
+                    shift.setImage(jsonObject.getString(VolleyRequestQueue.IMAGE));
+                    mShiftData[i] = shift;
+                }
+                mShiftAdapter.setShiftData(mShiftData);
 
             }
         }catch (JSONException e){

@@ -24,9 +24,24 @@ import deputy.android.com.deputyliang.model.Business;
 public class VolleyRequestQueue {
     public static final String BASE_URL = "https://apjoqdqpi3.execute-api.us-west-2.amazonaws.com/dmc";
     public static final String BUSINESS_URL = BASE_URL + "/business";
+    public static final String START_SHIFT_URL = BASE_URL + "/shift/start";
+    public static final String END_SHIFT_URL = BASE_URL + "/shift/end";
+    public static final String SHIFTS_URL = BASE_URL + "/shifts";
     public static final String PARAM_TOKEN = "Deputy 863407acb9e207441ec9e80d0debd4fe4489aa9b";
     public static final String PARAM_AUTHORIZATION = "Authorization";
 
+    public static final String POST_TIME_KEY = "time";
+    public static final String POST_LATITUDE_KEY = "latitude";
+    public static final String POST_LONGITUDE_KEY = "longitude";
+
+    public static final String ID = "id";
+    public static final String START = "start";
+    public static final String END = "end";
+    public static final String STARTLATITUDE = "startLatitude";
+    public static final String STARTLONGITUDE = "startLongitude";
+    public static final String ENDLATITUDE = "endLatitude";
+    public static final String ENDLONGITUDE = "endLongitude";
+    public static final String IMAGE = "image";
     private static Map<String, String> PARAM_HEADER;
 
     private static VolleyRequestQueue mInstance;

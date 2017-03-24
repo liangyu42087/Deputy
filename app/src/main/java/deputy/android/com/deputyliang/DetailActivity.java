@@ -23,6 +23,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -36,22 +41,27 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
+import deputy.android.com.deputyliang.network.VolleyRequestQueue;
 import deputy.android.com.deputyliang.service.LocationService;
 import deputy.android.com.deputyliang.util.GenericUtil;
 
 public class DetailActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, DeputyAsyncHandler.AsyncListener, OnMapReadyCallback{
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, DeputyAsyncHandler.AsyncListener, OnMapReadyCallback, Response.ErrorListener{
     public static final String SHIFT_ID_KEY = "SHIFT_ID_KEY";
     private static final String TAG = "DetailActivity";
     private static final int INSERT_TOKEN = 103;
@@ -286,6 +296,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setStart(currentTimeInMilli);
 
            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
+            postToApi(VolleyRequestQueue.START_SHIFT_URL, currentTimeInMilli, latitude, longitude);
         }else{
             cv.put(DeputyContract.ShiftEntry.COLUMN_END, currentTimeInMilli);
             cv.put(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE, latitude);
@@ -295,12 +306,36 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setEndLongitude(longitude);
             String id = String.valueOf(mShift.get_id());
             mAsyncHandler.startUpdate(UPDATE_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv, SELECTION, new String[]{id});
+            postToApi(VolleyRequestQueue.END_SHIFT_URL, currentTimeInMilli, latitude, longitude);
         }
 
         //Post to API
-        //Update UI
-
     }
+
+    @Override
+    public void onErrorResponse(VolleyError error) {
+        Log.e(TAG, getString(R.string.detail_activity_volley_error), error);
+    }
+
+    private void postToApi(String url, long time, double latitude, double longitude){
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put(VolleyRequestQueue.POST_TIME_KEY, GenericUtil.getISO_8601Format(time));
+            jsonObject.put(VolleyRequestQueue.POST_LATITUDE_KEY, latitude);
+            jsonObject.put(VolleyRequestQueue.POST_LONGITUDE_KEY, longitude);
+        }catch(JSONException e){
+            Log.e(TAG, getString(R.string.detail_activity_json_error), e);
+        }
+
+      JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonObject, null, this){
+          @Override
+          public Map<String, String> getHeaders() throws AuthFailureError {
+              return VolleyRequestQueue.getHeaderParameter();
+          }
+      };
+      jsonObjectRequest.setTag(TAG);
+      VolleyRequestQueue.getInstance(this).addToRequestQueue(jsonObjectRequest);
+  }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
