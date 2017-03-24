@@ -16,7 +16,7 @@ public class DeputyAsyncHandler extends AsyncQueryHandler{
     private WeakReference<AsyncListener> mListener;
 
     public interface AsyncListener {
-        void onAsyncComplete(int token, int result, Uri uri);
+        void onAsyncComplete(int token, int result, Uri uri, Cursor cursor);
     }
 
     public DeputyAsyncHandler(ContentResolver cr, AsyncListener listener) {
@@ -28,7 +28,10 @@ public class DeputyAsyncHandler extends AsyncQueryHandler{
         super(cr);
     }
 
-    *//**
+    */
+
+
+    /**
      * Assign the given {@link AsyncListener} to receive query events from
      * asynchronous calls. Will replace any existing listener.
      *//*
@@ -36,12 +39,22 @@ public class DeputyAsyncHandler extends AsyncQueryHandler{
         mListener = new WeakReference<AsyncListener>(listener);
     }*/
 
+
+    @Override
+    protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
+        super.onQueryComplete(token, cookie, cursor);
+        AsyncListener listener = mListener.get();
+        if(listener != null){
+            listener.onAsyncComplete(token, -1, null, cursor);
+        }
+    }
+
     @Override
     protected void onUpdateComplete(int token, Object cookie, int result) {
         super.onUpdateComplete(token, cookie, result);
         AsyncListener listener = mListener.get();
         if(listener != null){
-            listener.onAsyncComplete(token, result, null);
+            listener.onAsyncComplete(token, result, null, null);
         }
     }
 
@@ -50,7 +63,7 @@ public class DeputyAsyncHandler extends AsyncQueryHandler{
         super.onInsertComplete(token, cookie, uri);
         AsyncListener listener = mListener.get();
         if(listener != null){
-            listener.onAsyncComplete(token, -1, uri);
+            listener.onAsyncComplete(token, -1, uri, null);
         }
     }
 }

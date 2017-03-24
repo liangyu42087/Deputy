@@ -15,7 +15,7 @@ import java.util.Locale;
 
 public class GenericUtil {
     private static SimpleDateFormat sdf;
-    private static Geocoder geocoder;
+
     private static final String TIME_STMAP_FORMAT = "yyyy-MM-dd HH:mm a";
     public static String getFormattedTime(long timestamp){
         if(sdf == null){
@@ -24,7 +24,7 @@ public class GenericUtil {
         return sdf.format(timestamp);
     }
 
-    public static String getFormattedAddress(Context context, double longitude, double latitude){
+/*    public static String getFormattedAddress(Context context, double longitude, double latitude){
        if(geocoder == null) {
            geocoder = new Geocoder(context, Locale.getDefault());
        }
@@ -33,13 +33,13 @@ public class GenericUtil {
 
             String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
             String city = addresses.get(0).getLocality();
-            return address + city;
+            return address +" "+ city;
         }catch(IOException e){
             e.printStackTrace();;
         }catch(Exception e){
             e.printStackTrace();
         }
         return null;
-    }
+    }*/
 
 }

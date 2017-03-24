@@ -3,8 +3,12 @@ package deputy.android.com.deputyliang;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,6 +29,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,8 +38,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.w3c.dom.Text;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
@@ -44,19 +52,21 @@ import deputy.android.com.deputyliang.util.GenericUtil;
 
 public class DetailActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener, DeputyAsyncHandler.AsyncListener, OnMapReadyCallback{
+    public static final String SHIFT_ID_KEY = "SHIFT_ID_KEY";
     private static final String TAG = "DetailActivity";
     private static final int INSERT_TOKEN = 103;
     private static final int UPDATE_TOKEN = 104;
+    private static final int QUERY_TOKEN = 106;
     private static final String REQUESTING_LOCATION_UPDATES_KEY = "REQUESTING_LOCATION_UPDATES_KEY";
+
     private static final String LOCATION_KEY = "LOCATION_KEY";
     private static final String SHIFT_KEY = "SHIFT_KEY";
     private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
-
-
-
+    private static final String SELECTION = DeputyContract.ShiftEntry._ID + " = ?";
 
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
+    private Geocoder geocoder;
     private Location mLocation;
     private TextView tvStartTime;
     private TextView tvStartLocation;
@@ -69,7 +79,17 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
     private Shift mShift;
 
+    private GoogleMap mGoogleMap;
+
     private boolean mRequestingLocationUpdates = false;
+
+    private static final String PROJECTION[] = {DeputyContract.ShiftEntry._ID,
+            DeputyContract.ShiftEntry.COLUMN_START,
+            DeputyContract.ShiftEntry.COLUMN_END,
+            DeputyContract.ShiftEntry.COLUMN_START_LATITUDE,
+            DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE,
+            DeputyContract.ShiftEntry.COLUMN_END_LATITUDE,
+            DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE};
 
 
     @Override
@@ -90,6 +110,13 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
         mAsyncHandler = new DeputyAsyncHandler(getContentResolver(), this);
 
         updateValuesFromBundle(savedInstanceState);
+
+        Intent intent = getIntent();
+        if(intent.hasExtra(SHIFT_ID_KEY) && mShift == null){
+            int id = intent.getIntExtra(SHIFT_ID_KEY, -1);
+            Uri uri = DeputyContract.ShiftEntry.CONTENT_URI.buildUpon().appendPath(String.valueOf(id)).build();
+            mAsyncHandler.startQuery(QUERY_TOKEN, null, uri, PROJECTION, SELECTION, new String[]{String.valueOf(id)}, null);
+        }
     }
 
     private void setupLocationService(){
@@ -129,9 +156,33 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
                 mShift = savedInstanceState.getParcelable(SHIFT_KEY);
             }
             updateUI();
+            updateMap();
         }
     }
 
+    private void updateMap(){
+        if(mGoogleMap == null){
+            return;
+        }
+        //Set start location
+        if(mShift != null){
+            if(mShift.getStartLatitude() != 0){
+                LatLng latLng = new LatLng(mShift.getStartLatitude(), mShift.getStartLongitude());
+                mGoogleMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(getString(R.string.start_location)));
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,11));
+            }
+            if(mShift.getEndLatitude() != 0){
+                LatLng latLng = new LatLng(mShift.getEndLatitude(), mShift.getEndLongitude());
+                mGoogleMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(getString(R.string.start_location)));
+                mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,11));
+            }
+
+        }
+    }
     private void updateUI(){
         if(mShift != null){
             long startTime = mShift.getStart();
@@ -140,10 +191,35 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
             String formattedTime = GenericUtil.getFormattedTime(startTime);
             tvStartTime.setText(formattedTime);
-            String formattedAddress = GenericUtil.getFormattedAddress(this, startLongitude, startLatitude);
+            String formattedAddress = getFormattedAddress( startLongitude, startLatitude);
             if(formattedAddress != null){
                 tvStartLocation.setText(formattedAddress);
             }
+
+            long endTime = mShift.getEnd();
+            double endLatitude = mShift.getEndLatitude();
+            double endLongitude = mShift.getEndLongitude();
+
+            if(endTime > 0){
+                String formattedEndTime = GenericUtil.getFormattedTime(startTime);
+                tvEndTime.setText(formattedEndTime);
+                String formattedEndAddress = getFormattedAddress( startLongitude, startLatitude);
+                if(formattedAddress != null) {
+                    tvEndLocation.setText(formattedAddress);
+                }
+            }
+            if(endTime > 0 && startTime > 0){
+                btnShift.setVisibility(View.INVISIBLE);
+            }else if(startTime > 0){
+                btnShift.setVisibility(View.VISIBLE);
+                btnShift.setText(getString(R.string.end_shift));
+            }else{
+                btnShift.setVisibility(View.VISIBLE);
+                btnShift.setText(getString(R.string.start_shift));
+            }
+        }else{
+            btnShift.setVisibility(View.VISIBLE);
+            btnShift.setText(getString(R.string.start_shift));
         }
     }
 
@@ -156,12 +232,38 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
     }
 
     @Override
-    public void onAsyncComplete(int token, int result, Uri uri) {
+    public void onAsyncComplete(int token, int result, Uri uri, Cursor cursor) {
+        boolean success = false;
         if(token == INSERT_TOKEN && uri != null){
+            String id = uri.getLastPathSegment();
+            try{
+                mShift.set_id(Integer.parseInt(id));
+                success = true;
+            }catch(NumberFormatException nfe){
+                Log.e(TAG, "Cannot convert id to int", nfe);
+            }
             Log.d(TAG, "Insert successful");
-        }else{
+        }else if(token == UPDATE_TOKEN && result > 0){
+            success = true;
+            Log.d(TAG, "Update successful");
+        } else if(token == QUERY_TOKEN && cursor != null){
+            success = true;
+            Log.d(TAG, "Query successful");
+            if(cursor.moveToNext()){
+                mShift = new Shift();
+                mShift.set_id(cursor.getInt(cursor.getColumnIndex(DeputyContract.ShiftEntry._ID)));
+                mShift.setStart(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START)));
+                mShift.setStartLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE)));
+                mShift.setStartLatitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE)));
+                mShift.setEnd(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END)));
+                mShift.setEndLatitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE)));
+                mShift.setEndLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE)));
+                cursor.close();
+            }
 
         }
+        updateUI();
+        updateMap();
     }
 
     public void updateShift(View view){
@@ -184,11 +286,20 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setStart(currentTimeInMilli);
 
            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
+        }else{
+            cv.put(DeputyContract.ShiftEntry.COLUMN_END, currentTimeInMilli);
+            cv.put(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE, latitude);
+            cv.put(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE, longitude);
+            mShift.setEnd(currentTimeInMilli);
+            mShift.setEndLatitude(latitude);
+            mShift.setEndLongitude(longitude);
+            String id = String.valueOf(mShift.get_id());
+            mAsyncHandler.startUpdate(UPDATE_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv, SELECTION, new String[]{id});
         }
 
         //Post to API
         //Update UI
-        updateUI();
+
     }
 
     @Override
@@ -271,23 +382,25 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        mGoogleMap = googleMap;
+        updateMap();
+    }
 
-        //Set start location
-        if(mShift != null){
-            if(mShift.getStartLatitude() != 0){
-                googleMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(mShift.getStartLatitude(), mShift.getStartLongitude()))
-                        .title(getString(R.string.start_location)));
-            }
-            if(mShift.getEndLatitude() != 0){
-                googleMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(mShift.getEndLatitude(), mShift.getEndLongitude()))
-                        .title(getString(R.string.start_location)));
-            }
-
+    private String getFormattedAddress(double longitude, double latitude ){
+        if(geocoder == null) {
+            geocoder = new Geocoder(this, Locale.getDefault());
         }
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
 
-
-
+            String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+            String city = addresses.get(0).getLocality();
+            return address +" "+ city;
+        }catch(IOException e){
+            e.printStackTrace();;
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }

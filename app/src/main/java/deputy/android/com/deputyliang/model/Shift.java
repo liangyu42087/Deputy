@@ -1,5 +1,6 @@
 package deputy.android.com.deputyliang.model;
 
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -18,6 +19,7 @@ public class Shift implements Parcelable {
     private double endLongitude;
     private double endLatitude;
     private String image;
+
 
 
     public int get_id() {
@@ -98,6 +100,7 @@ public class Shift implements Parcelable {
 
     public Shift() {
     }
+
 
     @Override
     public int describeContents() {
