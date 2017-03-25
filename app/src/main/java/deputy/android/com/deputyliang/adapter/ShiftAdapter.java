@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import org.w3c.dom.Text;
 
 import deputy.android.com.deputyliang.R;
@@ -22,14 +24,15 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
 
     private Shift[] mShiftData;
     private final ShiftAdapterOnClickHandler mClickHandler;
-
+    private Context mContext;
 
     public interface ShiftAdapterOnClickHandler {
         void onClick(Shift shift);
     }
 
-    public ShiftAdapter(ShiftAdapterOnClickHandler clickHandler) {
+    public ShiftAdapter(Context context, ShiftAdapterOnClickHandler clickHandler) {
         mClickHandler = clickHandler;
+        mContext = context;
     }
 
     /**
@@ -87,7 +90,7 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
             String endTime = GenericUtil.getFormattedTime(shift.getEnd());
             shiftAdapterViewHolder.tv_main_end_time.setText(endTime);
         }
-
+        Picasso.with(mContext).load(shift.getImage()).resize(100, 100).into(shiftAdapterViewHolder.imageView);
 
         //shiftAdapterViewHolder.tv_shift.setText(String.valueOf(shift.getShift_id()));
     }

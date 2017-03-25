@@ -29,7 +29,9 @@
             android:authorities="deputy.android.com.deputyliang"
             android:exported="false" />
 
-
+        <service
+            android:name=".service.SyncService"
+            android:exported="false"/>
 
 
         <meta-data

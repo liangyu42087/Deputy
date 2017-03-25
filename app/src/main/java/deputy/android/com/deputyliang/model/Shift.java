@@ -1,5 +1,6 @@
 package deputy.android.com.deputyliang.model;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;

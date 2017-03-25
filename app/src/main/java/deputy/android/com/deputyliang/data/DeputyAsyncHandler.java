@@ -24,22 +24,6 @@ public class DeputyAsyncHandler extends AsyncQueryHandler{
         mListener = new WeakReference<AsyncListener>(listener);
     }
 
-/*    public DeputyAsyncHandler(ContentResolver cr) {
-        super(cr);
-    }
-
-    */
-
-
-    /**
-     * Assign the given {@link AsyncListener} to receive query events from
-     * asynchronous calls. Will replace any existing listener.
-     *//*
-    public void setListener(AsyncListener listener) {
-        mListener = new WeakReference<AsyncListener>(listener);
-    }*/
-
-
     @Override
     protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
         super.onQueryComplete(token, cookie, cursor);

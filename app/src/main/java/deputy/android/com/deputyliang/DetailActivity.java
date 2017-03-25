@@ -8,12 +8,10 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,7 +19,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -43,12 +40,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,8 +50,8 @@ import java.util.Map;
 import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
+import deputy.android.com.deputyliang.util.NetworkUtils;
 import deputy.android.com.deputyliang.network.VolleyRequestQueue;
-import deputy.android.com.deputyliang.service.LocationService;
 import deputy.android.com.deputyliang.util.GenericUtil;
 
 public class DetailActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -296,7 +290,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setStart(currentTimeInMilli);
 
            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
-            postToApi(VolleyRequestQueue.START_SHIFT_URL, currentTimeInMilli, latitude, longitude);
+            postToApi(NetworkUtils.START_SHIFT_URL, currentTimeInMilli, latitude, longitude);
         }else{
             cv.put(DeputyContract.ShiftEntry.COLUMN_END, currentTimeInMilli);
             cv.put(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE, latitude);
@@ -306,7 +300,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setEndLongitude(longitude);
             String id = String.valueOf(mShift.get_id());
             mAsyncHandler.startUpdate(UPDATE_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv, SELECTION, new String[]{id});
-            postToApi(VolleyRequestQueue.END_SHIFT_URL, currentTimeInMilli, latitude, longitude);
+            postToApi(NetworkUtils.END_SHIFT_URL, currentTimeInMilli, latitude, longitude);
         }
 
         //Post to API

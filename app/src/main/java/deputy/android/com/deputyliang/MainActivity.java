@@ -1,10 +1,7 @@
 package deputy.android.com.deputyliang;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,17 +30,19 @@ import deputy.android.com.deputyliang.adapter.ShiftAdapter;
 import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
+import deputy.android.com.deputyliang.util.NetworkUtils;
 import deputy.android.com.deputyliang.network.VolleyRequestQueue;
-import deputy.android.com.deputyliang.testing.ShiftTestUtil;
+import deputy.android.com.deputyliang.service.SyncService;
 import deputy.android.com.deputyliang.util.GenericUtil;
 
-public class MainActivity extends AppCompatActivity implements ShiftAdapter.ShiftAdapterOnClickHandler, Response.ErrorListener, Response.Listener, ImageLoader.ImageListener, DeputyAsyncHandler.AsyncListener{
+public class MainActivity extends AppCompatActivity implements ShiftAdapter.ShiftAdapterOnClickHandler, /*Response.ErrorListener, Response.Listener, ImageLoader.ImageListener,*/ DeputyAsyncHandler.AsyncListener{
 
     private RecyclerView mRecyclerView;
     private ShiftAdapter mShiftAdapter;
     private TextView mEmptyMessageDisplay;
     private String TAG = "MainActivity";
     private Shift[] mShiftData;
+    private Intent mServiceIntent;
 
     private static final int QUERY_TOKEN = 105;
 
@@ -68,15 +67,14 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
 
         mRecyclerView.setLayoutManager(layoutManager);
 
-        mShiftAdapter = new ShiftAdapter(this);
+        mShiftAdapter = new ShiftAdapter(this, this);
 
         mRecyclerView.setAdapter(mShiftAdapter);
 
-       // mShiftAdapter.setShiftData(ShiftTestUtil.generateArrayOfFakeShift());
-        //populateActionBar();
-
         mAsyncHandler = new DeputyAsyncHandler(getContentResolver(), this);
-       // populateShiftData();
+
+        mServiceIntent = new Intent(this, SyncService.class);
+        startService(mServiceIntent);
     }
 
     @Override
@@ -86,22 +84,7 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
     }
 
     private void populateShiftData(){
-
-        //If Internet exist retrieve from Server, else display local data from DB.
-
-        boolean noInternet = false;
-        if(noInternet){
-            mAsyncHandler.startQuery(QUERY_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, PROJECTION, null, null, SORT_ORDER);
-        }else{
-            JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, VolleyRequestQueue.SHIFTS_URL, null, this, this){
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    return VolleyRequestQueue.getHeaderParameter();
-                }
-            };
-            jsonArrayRequest.setTag(TAG);
-            VolleyRequestQueue.getInstance(this).addToRequestQueue(jsonArrayRequest);
-        }
+        mAsyncHandler.startQuery(QUERY_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, PROJECTION, null, null, SORT_ORDER);
     }
 
 
@@ -125,71 +108,6 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
                 mShiftAdapter.setShiftData(mShiftData);
             }
     }
-
-    /*
-        Populate actionbar with value returned by https://apjoqdqpi3.execute-api.us-west-2.amazonaws.com/dmc
-         */
-    private void populateActionBar(){
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, VolleyRequestQueue.BUSINESS_URL, null, this, this){
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                return VolleyRequestQueue.getHeaderParameter();
-            }
-        };
-        jsonObjectRequest.setTag(TAG);
-        VolleyRequestQueue.getInstance(this).addToRequestQueue(jsonObjectRequest);
-    }
-
-    @Override
-    public void onResponse(Object response) {
-        try {
-            if (response instanceof JSONObject) {
-                //Insert into DB.
-                JSONObject jsonObject = (JSONObject) response;
-                getSupportActionBar().setTitle(jsonObject.getString("name"));
-            } else if (response instanceof JSONArray) {
-                JSONArray jsonArray = (JSONArray)response;
-                mShiftData = new Shift[jsonArray.length()];
-                for(int i = 0; i < jsonArray.length(); i++){
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    Shift shift = new Shift();
-                    shift.set_id(jsonObject.getInt(VolleyRequestQueue.ID));
-                    shift.setStart(GenericUtil.getMillisecondsFromTime(jsonObject.getString(VolleyRequestQueue.START)));
-                    shift.setEnd(GenericUtil.getMillisecondsFromTime(jsonObject.getString(VolleyRequestQueue.END)));
-                    String startLatitude = jsonObject.getString(VolleyRequestQueue.STARTLATITUDE);
-                    if(startLatitude != null && !startLatitude.isEmpty()) shift.setStartLatitude(Double.parseDouble(startLatitude));
-                   String startLongitude = jsonObject.getString(VolleyRequestQueue.STARTLONGITUDE);
-                    if(startLongitude != null && !startLongitude.isEmpty()) shift.setStartLongitude(Double.parseDouble(startLongitude));
-
-                    String endLatitude = jsonObject.getString(VolleyRequestQueue.ENDLATITUDE);
-                    if(endLatitude != null && !endLatitude.isEmpty()) shift.setStartLatitude(Double.parseDouble(endLatitude));
-                    String endLongitude = jsonObject.getString(VolleyRequestQueue.ENDLONGITUDE);
-                    if(endLongitude != null && !endLongitude.isEmpty()) shift.setStartLongitude(Double.parseDouble(endLongitude));
-                    shift.setImage(jsonObject.getString(VolleyRequestQueue.IMAGE));
-                    mShiftData[i] = shift;
-                }
-                mShiftAdapter.setShiftData(mShiftData);
-
-            }
-        }catch (JSONException e){
-            Toast.makeText(this, getString(R.string.main_activity_volley_error), Toast.LENGTH_LONG).show();
-            Log.e(TAG, getString(R.string.main_activity_volley_error), e);
-        }
-    }
-
-    @Override
-    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-        if(response.getBitmap() != null){
-
-        }
-    }
-
-    @Override
-    public void onErrorResponse(VolleyError error) {
-        Toast.makeText(this, getString(R.string.main_activity_volley_error), Toast.LENGTH_LONG).show();
-        Log.e(TAG, getString(R.string.main_activity_volley_error), error);
-    }
-
     @Override
     public void onClick(Shift shift) {
         Intent intent = new Intent(this, DetailActivity.class);
