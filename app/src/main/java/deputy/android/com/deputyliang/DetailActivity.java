@@ -1,5 +1,6 @@
 package deputy.android.com.deputyliang;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -16,6 +17,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -50,6 +52,7 @@ import java.util.Map;
 import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
+import deputy.android.com.deputyliang.service.SyncService;
 import deputy.android.com.deputyliang.util.NetworkUtils;
 import deputy.android.com.deputyliang.network.VolleyRequestQueue;
 import deputy.android.com.deputyliang.util.GenericUtil;
@@ -87,6 +90,8 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
     private boolean mRequestingLocationUpdates = false;
 
+    private Intent mServiceIntent;
+
     private static final String PROJECTION[] = {DeputyContract.ShiftEntry._ID,
             DeputyContract.ShiftEntry.COLUMN_START,
             DeputyContract.ShiftEntry.COLUMN_END,
@@ -121,6 +126,8 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             Uri uri = DeputyContract.ShiftEntry.CONTENT_URI.buildUpon().appendPath(String.valueOf(id)).build();
             mAsyncHandler.startQuery(QUERY_TOKEN, null, uri, PROJECTION, SELECTION, new String[]{String.valueOf(id)}, null);
         }
+
+        mServiceIntent = new Intent(this, SyncService.class);
     }
 
     private void setupLocationService(){
@@ -159,6 +166,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             if(savedInstanceState.keySet().contains(SHIFT_KEY)){
                 mShift = savedInstanceState.getParcelable(SHIFT_KEY);
             }
+
             updateUI();
             updateMap();
         }
@@ -205,9 +213,9 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             double endLongitude = mShift.getEndLongitude();
 
             if(endTime > 0){
-                String formattedEndTime = GenericUtil.getFormattedTime(startTime);
+                String formattedEndTime = GenericUtil.getFormattedTime(endTime);
                 tvEndTime.setText(formattedEndTime);
-                String formattedEndAddress = getFormattedAddress( startLongitude, startLatitude);
+                String formattedEndAddress = getFormattedAddress( endLongitude, endLatitude);
                 if(formattedAddress != null) {
                     tvEndLocation.setText(formattedAddress);
                 }
@@ -238,19 +246,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
     @Override
     public void onAsyncComplete(int token, int result, Uri uri, Cursor cursor) {
         boolean success = false;
-        if(token == INSERT_TOKEN && uri != null){
-            String id = uri.getLastPathSegment();
-            try{
-                mShift.set_id(Integer.parseInt(id));
-                success = true;
-            }catch(NumberFormatException nfe){
-                Log.e(TAG, "Cannot convert id to int", nfe);
-            }
-            Log.d(TAG, "Insert successful");
-        }else if(token == UPDATE_TOKEN && result > 0){
-            success = true;
-            Log.d(TAG, "Update successful");
-        } else if(token == QUERY_TOKEN && cursor != null){
+        if(token == QUERY_TOKEN && cursor != null){
             success = true;
             Log.d(TAG, "Query successful");
             if(cursor.moveToNext()){
@@ -264,7 +260,6 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
                 mShift.setEndLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE)));
                 cursor.close();
             }
-
         }
         updateUI();
         updateMap();
@@ -284,26 +279,30 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             cv.put(DeputyContract.ShiftEntry.COLUMN_START, currentTimeInMilli);
             cv.put(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE, latitude);
             cv.put(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE, longitude);
+
             mShift = new Shift();
             mShift.setStartLatitude(latitude);
             mShift.setStartLongitude(longitude);
             mShift.setStart(currentTimeInMilli);
 
-           mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
+            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
             postToApi(NetworkUtils.START_SHIFT_URL, currentTimeInMilli, latitude, longitude);
+            startService(mServiceIntent);
         }else{
             cv.put(DeputyContract.ShiftEntry.COLUMN_END, currentTimeInMilli);
             cv.put(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE, latitude);
             cv.put(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE, longitude);
+
+            String id = String.valueOf(mShift.get_id());
+            mAsyncHandler.startUpdate(UPDATE_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv, SELECTION, new String[]{id});
             mShift.setEnd(currentTimeInMilli);
             mShift.setEndLatitude(latitude);
             mShift.setEndLongitude(longitude);
-            String id = String.valueOf(mShift.get_id());
-            mAsyncHandler.startUpdate(UPDATE_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv, SELECTION, new String[]{id});
             postToApi(NetworkUtils.END_SHIFT_URL, currentTimeInMilli, latitude, longitude);
+            startService(mServiceIntent);
         }
-
-        //Post to API
+        updateUI();
+        updateMap();
     }
 
     @Override

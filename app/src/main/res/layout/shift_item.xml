@@ -72,11 +72,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tv_main_start_time"
-        android:layout_marginStart="24dp"
         app:layout_constraintLeft_toRightOf="@+id/textView4"
-        android:layout_marginLeft="24dp"
         tools:text="2017-03-21 5:32 pm"
-        app:layout_constraintTop_toTopOf="@+id/textView4" />
+        app:layout_constraintTop_toTopOf="@+id/textView4"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp" />
 
     <TextView
         android:layout_width="wrap_content"

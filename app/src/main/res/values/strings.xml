@@ -13,6 +13,7 @@
     <string name="end_location">End location:</string>
     <string name="start_shift">Start shift</string>
     <string name="end_shift">End shift</string>
-
-
+    <string name="incomplete_shift">You already started a shift, please complete the shift before starting a new shift.</string>
+    <string name="start">Start</string>
+    <string name="end">End</string>
 </resources>

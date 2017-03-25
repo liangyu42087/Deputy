@@ -261,8 +261,8 @@ public class TestDeputyProvider {
          */
         shiftValues.put(DeputyContract.ShiftEntry.COLUMN_END, "2017-01-16T18:42:12+00:00");
 
-        //String selection = DeputyContract.ShiftEntry.COLUMN_SHIFT_ID + " = ?";
-        String [] selectionArgs = {"42"};
+        String selection = DeputyContract.ShiftEntry._ID + " = ?";
+        String [] selectionArgs = {String.valueOf(rowId)};
 
         int updatedRows = contentResolver.update(DeputyContract.ShiftEntry.CONTENT_URI, shiftValues, selection, selectionArgs);
 

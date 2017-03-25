@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.squareup.picasso.Picasso;
@@ -28,7 +29,7 @@ import deputy.android.com.deputyliang.util.NetworkUtils;
 public class SyncService extends IntentService {
 
     private static final String TAG = "SyncService";
-
+    public static final String SYNC_COMPLETE_BROADCAST = "SYNC_COMPLETE_BROADCAST";
     public SyncService() {
         super("SyncService");
     }
@@ -80,11 +81,18 @@ public class SyncService extends IntentService {
                 Bulk insert
                  */
             getContentResolver().bulkInsert(DeputyContract.ShiftEntry.CONTENT_URI, contentValuesArray);
+
+            sendBroadcast();
         }catch(IOException e){
             Log.e(TAG, "Unable to load shift from server", e);
         }catch (JSONException e){
             Log.e(TAG, "Unable to convert response to JSON", e);
         }
 
+    }
+
+    private void sendBroadcast() {
+        Intent intent = new Intent(SYNC_COMPLETE_BROADCAST);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

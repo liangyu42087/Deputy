@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.LruCache;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
@@ -13,9 +12,6 @@ import com.android.volley.toolbox.Volley;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import deputy.android.com.deputyliang.MainActivity;
-import deputy.android.com.deputyliang.model.Business;
 
 /**
  * Created by liangyu42087 on 2017/3/22.

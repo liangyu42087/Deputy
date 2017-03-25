@@ -21,6 +21,7 @@ public class GenericUtil {
     private static final String TIME_STMAP_FORMAT = "yyyy-MM-dd HH:mm a";
     private static final String ISO_8601_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
     public static String getFormattedTime(long timestamp){
+
         return new SimpleDateFormat(TIME_STMAP_FORMAT).format(timestamp);
     }
 

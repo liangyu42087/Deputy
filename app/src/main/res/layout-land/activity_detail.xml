@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        android:name="com.google.android.gms.maps.MapFragment"
+        android:id="@+id/map"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        tools:layout_editor_absoluteY="1dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="16dp" />
+
+
+    <TextView
+        android:text="@string/start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/map"
+        android:layout_marginStart="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_startTime"
+        tools:text="2017-01-17T06:35:57+00:00"
+        app:layout_constraintLeft_toLeftOf="@+id/textView"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_startLocation"
+        tools:text="132 Arthus St, North Sydney"
+        app:layout_constraintLeft_toLeftOf="@+id/tv_startTime"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_startTime" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView5"
+        android:text="@string/end"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="@+id/textView"
+        android:layout_marginStart="224dp"
+        app:layout_constraintLeft_toRightOf="@+id/textView"
+        android:layout_marginLeft="224dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_endTime"
+        tools:text="2017-01-17T06:35:57+00:00"
+        app:layout_constraintLeft_toLeftOf="@+id/textView5"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/textView5" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_endLocation"
+        tools:text="132 Arthus St, North Sydney"
+        app:layout_constraintLeft_toLeftOf="@+id/tv_endTime"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_endTime" />
+
+    <Button
+        android:text="@string/start_shift"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_shift"
+        android:padding="15dp"
+        android:background="@drawable/button_selector"
+        android:textColor="@android:color/white"
+        android:onClick="updateShift"
+        app:layout_constraintTop_toTopOf="@+id/textView5"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_endLocation"
+        android:layout_marginStart="168dp"
+        app:layout_constraintLeft_toRightOf="@+id/textView5"
+        android:layout_marginLeft="168dp"
+        app:layout_constraintVertical_bias="0.57" />
+</android.support.constraint.ConstraintLayout>

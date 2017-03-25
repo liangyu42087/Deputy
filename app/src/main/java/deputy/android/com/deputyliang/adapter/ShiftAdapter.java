@@ -82,14 +82,13 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
     public void onBindViewHolder(ShiftAdapterViewHolder shiftAdapterViewHolder, int position) {
         Shift shift = mShiftData[position];
         shiftAdapterViewHolder.tv_main_id.setText(String.valueOf(shift.get_id()));
-        if(shift.getStart() > 0){
-            String startTime = GenericUtil.getFormattedTime(shift.getStart());
-            shiftAdapterViewHolder.tv_main_start_time.setText(startTime);
-        }
-        if(shift.getEnd() > 0){
-            String endTime = GenericUtil.getFormattedTime(shift.getEnd());
-            shiftAdapterViewHolder.tv_main_end_time.setText(endTime);
-        }
+
+        String startTime = (shift.getStart() > 0) ? GenericUtil.getFormattedTime(shift.getStart()) : "";
+        shiftAdapterViewHolder.tv_main_start_time.setText(startTime);
+
+        String endTime = (shift.getEnd() > 0) ? GenericUtil.getFormattedTime(shift.getEnd()) : "";
+        shiftAdapterViewHolder.tv_main_end_time.setText(endTime);
+
         Picasso.with(mContext).load(shift.getImage()).resize(100, 100).into(shiftAdapterViewHolder.imageView);
 
         //shiftAdapterViewHolder.tv_shift.setText(String.valueOf(shift.getShift_id()));
