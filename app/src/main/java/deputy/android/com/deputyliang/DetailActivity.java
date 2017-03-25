@@ -114,6 +114,9 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
         fragmentMap = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         fragmentMap.getMapAsync(this);
 
+        /*
+        Setup location service.
+         */
         setupLocationService();
 
         mAsyncHandler = new DeputyAsyncHandler(getContentResolver(), this);
@@ -122,6 +125,9 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
         Intent intent = getIntent();
         if(intent.hasExtra(SHIFT_ID_KEY) && mShift == null){
+            /*
+            Request from mainactivity list click, retrieve the id passed and query table.
+             */
             int id = intent.getIntExtra(SHIFT_ID_KEY, -1);
             Uri uri = DeputyContract.ShiftEntry.CONTENT_URI.buildUpon().appendPath(String.valueOf(id)).build();
             mAsyncHandler.startQuery(QUERY_TOKEN, null, uri, PROJECTION, SELECTION, new String[]{String.valueOf(id)}, null);
@@ -150,15 +156,10 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            // Update the value of mRequestingLocationUpdates from the Bundle, and
-            // make sure that the Start Updates and Stop Updates buttons are
-            // correctly enabled or disabled.
             if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
                 mRequestingLocationUpdates = savedInstanceState.getBoolean(REQUESTING_LOCATION_UPDATES_KEY);
             }
 
-            // Update the value of mCurrentLocation from the Bundle and update the
-            // UI to show the correct latitude and longitude.
             if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
                 mLocation = savedInstanceState.getParcelable(LOCATION_KEY);
             }
@@ -276,6 +277,9 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
         }
         long currentTimeInMilli = new Date().getTime();
         if(mShift == null){
+            /*
+            start shift.
+             */
             cv.put(DeputyContract.ShiftEntry.COLUMN_START, currentTimeInMilli);
             cv.put(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE, latitude);
             cv.put(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE, longitude);
@@ -285,7 +289,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             mShift.setStartLongitude(longitude);
             mShift.setStart(currentTimeInMilli);
 
-            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv);
+            mAsyncHandler.startInsert(INSERT_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, cv); //Insert to db for instance access as the sync is quite slow
             postToApi(NetworkUtils.START_SHIFT_URL, currentTimeInMilli, latitude, longitude);
             startService(mServiceIntent);
         }else{

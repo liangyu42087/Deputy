@@ -85,6 +85,9 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
 
         mServiceIntent = new Intent(this, SyncService.class);
         if(!mServiceStarted) {
+            /*
+            Start up SyncService on the first start, but we dont want to start a SyncService everytime the screen rotates.
+             */
             mServiceStarted = true;
             startService(mServiceIntent);
         }
@@ -92,10 +95,11 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
         BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                //Sync complete reload list
+                //SyncService complete reload list
                 populateShiftData();
             }
         };
+        //Broadcast receiver that listen to SyncService.
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(receiver, new IntentFilter(SyncService.SYNC_COMPLETE_BROADCAST));
 
@@ -111,6 +115,9 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        /*
+        We dont want the SyncService to start on every rotates, so save the state.
+         */
         outState.putBoolean(SERVICE_STARTED_KEY, mServiceStarted);
         super.onSaveInstanceState(outState);
     }
@@ -122,27 +129,33 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
     }
 
     private void populateShiftData(){
+        /*
+        User AsyncQueueHandler to call content provider.
+         */
         mAsyncHandler.startQuery(QUERY_TOKEN, null, DeputyContract.ShiftEntry.CONTENT_URI, PROJECTION, null, null, SORT_ORDER);
     }
 
     @Override
     public void onAsyncComplete(int token, int result, Uri uri, Cursor cursor) {
-            if(token == QUERY_TOKEN && cursor != null){
-                mShiftData = new Shift[cursor.getCount()];
-                for(int i = 0; i < cursor.getCount(); i ++){
-                    if(!cursor.moveToNext()){
-                        break;
-                    }
-                    Shift shift = new Shift();
-                    shift.set_id(cursor.getInt(cursor.getColumnIndex(DeputyContract.ShiftEntry._ID)));
-                    shift.setStart(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START)));
-                    shift.setEnd(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END)));
-                    shift.setImage(cursor.getString(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_IMAGE)));
-                    mShiftData[i] = shift;
+        /*
+            When load from DB complete, refresh recycler view.
+         */
+        if(token == QUERY_TOKEN && cursor != null){
+            mShiftData = new Shift[cursor.getCount()];
+            for(int i = 0; i < cursor.getCount(); i ++){
+                if(!cursor.moveToNext()){
+                    break;
                 }
-                cursor.close();
-                mShiftAdapter.setShiftData(mShiftData);
+                Shift shift = new Shift();
+                shift.set_id(cursor.getInt(cursor.getColumnIndex(DeputyContract.ShiftEntry._ID)));
+                shift.setStart(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START)));
+                shift.setEnd(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END)));
+                shift.setImage(cursor.getString(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_IMAGE)));
+                mShiftData[i] = shift;
             }
+            cursor.close();
+            mShiftAdapter.setShiftData(mShiftData);
+        }
     }
     @Override
     public void onClick(Shift shift) {
@@ -156,6 +169,9 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
             Shift shift = mShiftData[0];
             if(shift.getEnd() <= 0){
                 //Incomplete shifts
+                /*
+                We dont want the user to create another shift if there is already an incompleted shift.
+                 */
                 Toast.makeText(this, getString(R.string.incomplete_shift), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -165,9 +181,4 @@ public class MainActivity extends AppCompatActivity implements ShiftAdapter.Shif
         startActivity(intent);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        VolleyRequestQueue.getInstance(this).getRequestQueue().cancelAll(TAG);
-    }
 }

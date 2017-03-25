@@ -10,8 +10,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
 import deputy.android.com.deputyliang.R;
 import deputy.android.com.deputyliang.model.Shift;
 import deputy.android.com.deputyliang.util.GenericUtil;
@@ -35,9 +33,6 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
         mContext = context;
     }
 
-    /**
-     * Cache of the children views for a forecast list item.
-     */
     public class ShiftAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         public final ImageView imageView;
         public final TextView tv_main_start_time;
@@ -91,7 +86,6 @@ public class ShiftAdapter extends RecyclerView.Adapter<ShiftAdapter.ShiftAdapter
 
         Picasso.with(mContext).load(shift.getImage()).resize(100, 100).into(shiftAdapterViewHolder.imageView);
 
-        //shiftAdapterViewHolder.tv_shift.setText(String.valueOf(shift.getShift_id()));
     }
 
 

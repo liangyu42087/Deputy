@@ -41,7 +41,7 @@ public class SyncService extends IntentService {
         /*
         Load api data.
         Load image
-        Sync db
+        Sync db by delete and bulkinsert
          */
 
         try {
@@ -82,6 +82,9 @@ public class SyncService extends IntentService {
                  */
             getContentResolver().bulkInsert(DeputyContract.ShiftEntry.CONTENT_URI, contentValuesArray);
 
+            /*
+            Send broadcast to mainActivity
+             */
             sendBroadcast();
         }catch(IOException e){
             Log.e(TAG, "Unable to load shift from server", e);
