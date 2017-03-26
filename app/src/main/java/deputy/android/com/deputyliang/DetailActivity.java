@@ -54,6 +54,7 @@ import deputy.android.com.deputyliang.data.DeputyAsyncHandler;
 import deputy.android.com.deputyliang.data.DeputyContract;
 import deputy.android.com.deputyliang.model.Shift;
 import deputy.android.com.deputyliang.service.SyncService;
+import deputy.android.com.deputyliang.util.CursorUtil;
 import deputy.android.com.deputyliang.util.NetworkUtils;
 import deputy.android.com.deputyliang.network.VolleyRequestQueue;
 import deputy.android.com.deputyliang.util.GenericUtil;
@@ -259,14 +260,7 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             success = true;
             Log.d(TAG, "Query successful");
             if(cursor.moveToNext()){
-                mShift = new Shift();
-                mShift.set_id(cursor.getInt(cursor.getColumnIndex(DeputyContract.ShiftEntry._ID)));
-                mShift.setStart(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START)));
-                mShift.setStartLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START_LONGITUDE)));
-                mShift.setStartLatitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_START_LATITUDE)));
-                mShift.setEnd(cursor.getLong(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END)));
-                mShift.setEndLatitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE)));
-                mShift.setEndLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE)));
+                mShift = CursorUtil.getShiftFromCursor(cursor);
                 cursor.close();
             }
         } else if(token == INSERT_TOKEN && uri != null){
