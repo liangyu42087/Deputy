@@ -3,6 +3,7 @@ package deputy.android.com.deputyliang.service;
 import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
@@ -33,6 +34,7 @@ public class SyncService extends IntentService {
     public SyncService() {
         super("SyncService");
     }
+    private static final String UPDATE_SELECTION = DeputyContract.ShiftEntry._ID + " = ?";
     private Shift[] mShiftData;
 
     @Override
@@ -40,51 +42,63 @@ public class SyncService extends IntentService {
 
         /*
         Load api data.
-        Load image
-        Sync db by delete and bulkinsert
+        Compare with existing db data
+        If no row exist
+            get image and save to file.
+            insert row
+        If row exist
+            check if image exist, if not get image and save to file
+            update row.
          */
 
         try {
+            Cursor cursor = getContentResolver().query(DeputyContract.ShiftEntry.CONTENT_URI, null, null, null, null, null);
+
             String response = NetworkUtils.getResponseFromHttpUrl(NetworkUtils.SHIFTS_URL);
             JSONArray jsonArray = new JSONArray(response);
-            ContentValues[] contentValuesArray = new ContentValues[jsonArray.length()];
             for(int i = 0 ; i < jsonArray.length(); i ++){
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 Shift shift = DeputyJsonUtil.getShiftFromJson(jsonObject);
                 try {
                     String imageUrl = shift.getImage();
-                    Picasso.with(this).invalidate(imageUrl);
-                    Bitmap bitmap = Picasso.with(this).load(imageUrl).resize(100, 100).get();
-                    Uri uri = FileUtil.saveToInternalStorage(this, bitmap, String.valueOf(shift.get_id()));
+                    String id = String.valueOf(shift.get_id());
 
-                        /*
-                        Set the image to our file path
-                         */
-                    shift.setImage(uri.toString());
+                    if(cursor.moveToPosition(i)){
+                    /*
+                    Cursor moved, row exist check if image exist;
+                     */
+                        String existingImage = cursor.getString(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_IMAGE));
+                        if(existingImage == null || existingImage.isEmpty()){
+                            //Image does not exist, get from URL and insert
+                            String newImageUri =  getImageFromServerAndSaveToFile(id, shift.getImage());
+                            ContentValues contentValues = new ContentValues();
+                            contentValues.put(DeputyContract.ShiftEntry.COLUMN_IMAGE, newImageUri);
+                            int rowUpdated = getContentResolver().update(DeputyContract.ShiftEntry.CONTENT_URI, contentValues, UPDATE_SELECTION, new String[]{id});
+                            if(rowUpdated != 1){
+                                Log.e(TAG, "Error updating row.");
+                            }
+                        }
 
-                        /*
-                        Write image to file
-                         */
+
+
+                    }else{
+                    /*
+                    Unable to move cursor, no row exist. insert
+                     */
+
+
+                        String newImageUri = getImageFromServerAndSaveToFile(id, shift.getImage());
+                        shift.setImage(newImageUri);
+                        ContentValues contentValues = DeputyJsonUtil.getContentValuesFromShift(shift);
+                        Uri uri =  getContentResolver().insert(DeputyContract.ShiftEntry.CONTENT_URI, contentValues );
+                        if(uri == null){
+                            Log.e(TAG, "Unable to insert row.");
+                        }
+                    }
                 }catch(IOException ioe){
                     Log.e(TAG, "Unable to load image", ioe);
                 }
-
-                contentValuesArray[i] = DeputyJsonUtil.getContentValuesFromShift(shift);
             }
-
-                /*
-                Remove existing row form database
-                 */
-            getContentResolver().delete(DeputyContract.ShiftEntry.CONTENT_URI, null, null);
-
-                /*
-                Bulk insert
-                 */
-            getContentResolver().bulkInsert(DeputyContract.ShiftEntry.CONTENT_URI, contentValuesArray);
-
-            /*
-            Send broadcast to mainActivity
-             */
             sendBroadcast();
         }catch(IOException e){
             Log.e(TAG, "Unable to load shift from server", e);
@@ -93,6 +107,14 @@ public class SyncService extends IntentService {
         }
 
     }
+    private String getImageFromServerAndSaveToFile(String id, String imageUrl) throws IOException{
+        Picasso.with(this).invalidate(imageUrl);
+        Bitmap bitmap = Picasso.with(this).load(imageUrl).resize(100, 100).get();
+        Uri uri = FileUtil.saveToInternalStorage(this, bitmap, String.valueOf(id));
+        return uri.toString();
+    }
+
+
 
     private void sendBroadcast() {
         Intent intent = new Intent(SYNC_COMPLETE_BROADCAST);

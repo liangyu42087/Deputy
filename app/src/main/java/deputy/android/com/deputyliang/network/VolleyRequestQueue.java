@@ -18,11 +18,6 @@ import java.util.Map;
  */
 
 public class VolleyRequestQueue {
-/*    public static final String BASE_URL = "https://apjoqdqpi3.execute-api.us-west-2.amazonaws.com/dmc";
-    public static final String BUSINESS_URL = BASE_URL + "/business";
-    public static final String START_SHIFT_URL = BASE_URL + "/shift/start";
-    public static final String END_SHIFT_URL = BASE_URL + "/shift/end";
-    public static final String SHIFTS_URL = BASE_URL + "/shifts";*/
     public static final String PARAM_TOKEN = "Deputy 863407acb9e207441ec9e80d0debd4fe4489aa9b";
     public static final String PARAM_AUTHORIZATION = "Authorization";
 
@@ -36,27 +31,11 @@ public class VolleyRequestQueue {
     private static VolleyRequestQueue mInstance;
     private RequestQueue mRequestQueue;
     private static Context mContext;
-    private ImageLoader mImageLoader;
     private JsonObjectRequest mJsonObjectRequest;
 
     private VolleyRequestQueue(Context context) {
         mContext = context;
         mRequestQueue = getRequestQueue();
-        mImageLoader = new ImageLoader(mRequestQueue,
-                new ImageLoader.ImageCache() {
-                    private final LruCache<String, Bitmap>
-                            cache = new LruCache<String, Bitmap>(20);
-
-                    @Override
-                    public Bitmap getBitmap(String url) {
-                        return cache.get(url);
-                    }
-
-                    @Override
-                    public void putBitmap(String url, Bitmap bitmap) {
-                        cache.put(url, bitmap);
-                    }
-                });
     }
     public static synchronized VolleyRequestQueue getInstance(Context context) {
         if (mInstance == null) {
@@ -76,14 +55,14 @@ public class VolleyRequestQueue {
         getRequestQueue().add(req);
     }
 
+    /*
+    Authorization header
+     */
     public static Map<String, String> getHeaderParameter(){
         if(PARAM_HEADER == null){
             PARAM_HEADER = new HashMap<String, String>();
             PARAM_HEADER.put(PARAM_AUTHORIZATION, PARAM_TOKEN);
         }
         return PARAM_HEADER;
-    }
-    public ImageLoader getImageLoader() {
-        return mImageLoader;
     }
 }

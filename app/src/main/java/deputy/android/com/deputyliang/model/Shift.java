@@ -12,7 +12,6 @@ import android.os.Parcelable;
 public class Shift implements Parcelable {
 
     private int _id;
-//    private int shift_id;
     private long start;
     private long end;
     private double startLongitude;
@@ -46,17 +45,6 @@ public class Shift implements Parcelable {
     public long getEnd() {
         return end;
     }
-/*
-
-    public int getShift_id() {
-        return shift_id;
-    }
-
-
-    public void setShift_id(int shift_id) {
-        this.shift_id = shift_id;
-    }*/
-
 
 
     public double getStartLongitude() {
