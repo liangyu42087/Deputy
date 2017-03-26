@@ -1,6 +1,5 @@
 package deputy.android.com.deputyliang;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,11 +12,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -58,7 +59,8 @@ import deputy.android.com.deputyliang.network.VolleyRequestQueue;
 import deputy.android.com.deputyliang.util.GenericUtil;
 
 public class DetailActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, DeputyAsyncHandler.AsyncListener, OnMapReadyCallback, Response.ErrorListener{
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, DeputyAsyncHandler.AsyncListener,
+        OnMapReadyCallback, Response.ErrorListener, LoaderManager.LoaderCallbacks<Shift> {
     public static final String SHIFT_ID_KEY = "SHIFT_ID_KEY";
     private static final String TAG = "DetailActivity";
     private static final int INSERT_TOKEN = 103;
@@ -70,6 +72,9 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
     private static final String SHIFT_KEY = "SHIFT_KEY";
     private static final int MY_PERMISSION_ACCESS_COURSE_LOCATION = 11;
     private static final String SELECTION = DeputyContract.ShiftEntry._ID + " = ?";
+
+    private static final int ADDRESS_SEARCH_LOADER = 22;
+
 
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
@@ -204,10 +209,10 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
 
             String formattedTime = GenericUtil.getFormattedTime(startTime);
             tvStartTime.setText(formattedTime);
-            String formattedAddress = getFormattedAddress( startLongitude, startLatitude);
+            /*String formattedAddress = getFormattedAddress( startLongitude, startLatitude);
             if(formattedAddress != null){
                 tvStartLocation.setText(formattedAddress);
-            }
+            }*/
 
             long endTime = mShift.getEnd();
             double endLatitude = mShift.getEndLatitude();
@@ -216,11 +221,14 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
             if(endTime > 0){
                 String formattedEndTime = GenericUtil.getFormattedTime(endTime);
                 tvEndTime.setText(formattedEndTime);
-                String formattedEndAddress = getFormattedAddress( endLongitude, endLatitude);
+               /* String formattedEndAddress = getFormattedAddress( endLongitude, endLatitude);
                 if(formattedAddress != null) {
                     tvEndLocation.setText(formattedAddress);
-                }
+                }*/
+
             }
+
+            queryForAddressUsingLatLong(mShift);
             if(endTime > 0 && startTime > 0){
                 btnShift.setVisibility(View.INVISIBLE);
             }else if(startTime > 0){
@@ -260,6 +268,16 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
                 mShift.setEndLatitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LATITUDE)));
                 mShift.setEndLongitude(cursor.getDouble(cursor.getColumnIndex(DeputyContract.ShiftEntry.COLUMN_END_LONGITUDE)));
                 cursor.close();
+            }
+        } else if(token == INSERT_TOKEN && uri != null){
+            if(mShift != null){
+                String id =  uri.getLastPathSegment();
+                try {
+                    mShift.set_id(Integer.parseInt(id));
+                }catch(NumberFormatException nfe){
+                    nfe.printStackTrace();
+                    Log.e(TAG, "Unable to conver lastpathsegment to integer : " + id, nfe);
+                }
             }
         }
         updateUI();
@@ -416,6 +434,60 @@ public class DetailActivity extends AppCompatActivity implements GoogleApiClient
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
         updateMap();
+    }
+
+
+    @Override
+    public Loader<Shift> onCreateLoader(int id, final Bundle args) {
+        return new AsyncTaskLoader<Shift>(this) {
+
+            @Override
+            protected void onStartLoading() {
+                if (args == null) {
+                    return;
+                }
+                forceLoad();
+            }
+
+            @Override
+            public Shift loadInBackground() {
+                Shift shift = args.getParcelable(SHIFT_KEY);
+                double startLongitude = shift.getStartLongitude();
+                double startLatitude = shift.getStartLatitude();
+                double endLongitude = shift.getEndLongitude();
+                double endLatitude = shift.getEndLatitude();
+
+                String startAddress = (startLatitude != 0) ? getFormattedAddress(startLongitude, startLatitude) : "";
+                String endAddress = (endLatitude != 0) ? getFormattedAddress(endLongitude, endLatitude) : "";
+                shift.setStartAddress(startAddress);
+                shift.setEndAddress(endAddress);
+                return shift;
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Shift> loader, Shift data) {
+        tvStartLocation.setText(data.getStartAddress());
+        tvEndLocation.setText(data.getEndAddress());
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Shift> loader) {
+        //We not using this
+    }
+
+    private void queryForAddressUsingLatLong(Shift shift){
+        Bundle queryBundle = new Bundle();
+        queryBundle.putParcelable(SHIFT_KEY, shift);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> locationSearchLoader = loaderManager.getLoader(ADDRESS_SEARCH_LOADER);
+        if (locationSearchLoader == null) {
+            loaderManager.initLoader(ADDRESS_SEARCH_LOADER, queryBundle, this);
+        } else {
+            loaderManager.restartLoader(ADDRESS_SEARCH_LOADER, queryBundle, this);
+        }
     }
 
     private String getFormattedAddress(double longitude, double latitude ){
